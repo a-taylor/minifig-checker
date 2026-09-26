@@ -1,0 +1,7 @@
+*.jpeg
+*.jpg
+*.JPG
+*.png
+!icons/*.png
+.claude/
+.DS_Store

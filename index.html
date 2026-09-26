@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1d3b8f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Minifigs">
+  <title>Minifig Checker</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <h1 id="series-title">Minifig Checker</h1>
+    <span id="progress" class="progress"></span>
+  </header>
+
+  <main>
+    <!-- Scan -->
+    <section id="view-scan" class="view active">
+      <div class="camera">
+        <video id="video" playsinline muted autoplay></video>
+        <div class="reticle"></div>
+        <div id="camera-msg" class="camera-msg">Tap to start camera</div>
+      </div>
+
+      <label class="button secondary photo">Scan from a photo instead
+        <input id="photo-input" type="file" accept="image/*" hidden>
+      </label>
+
+      <div id="result" class="result hidden">
+        <div id="result-banner" class="banner"></div>
+        <div id="result-name" class="result-name"></div>
+        <div id="result-code" class="result-code"></div>
+        <div id="result-actions" class="actions"></div>
+      </div>
+    </section>
+
+    <!-- Collection -->
+    <section id="view-collection" class="view">
+      <ul id="figure-list" class="figure-list"></ul>
+    </section>
+
+    <!-- Settings -->
+    <section id="view-settings" class="view">
+      <div class="card">
+        <h2>Clear collection</h2>
+        <p>Mark every figure as not owned. Known box codes are kept.</p>
+        <button id="btn-clear" class="danger">Clear collection</button>
+      </div>
+
+      <div class="card">
+        <h2>New series</h2>
+        <p>Replaces all figures and codes. Export first if you want a backup.</p>
+        <label>Series name <input id="new-series-name" placeholder="e.g. 71054 Series 28"></label>
+        <label>Figure names (one per line)
+          <textarea id="new-series-figs" rows="8"></textarea>
+        </label>
+        <button id="btn-new-series" class="danger">Start new series</button>
+      </div>
+
+      <div class="card">
+        <h2>Backup</h2>
+        <p>Save your collection and codes to a file, or load one.</p>
+        <div class="row">
+          <button id="btn-export">Export</button>
+          <label class="button">Import<input id="import-file" type="file" accept="application/json,.json" hidden></label>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabs">
+    <button data-view="scan" class="active">Scan</button>
+    <button data-view="collection">Collection</button>
+    <button data-view="settings">Settings</button>
+  </nav>
+
+  <dialog id="picker">
+    <h2 id="picker-title">Which figure was it?</h2>
+    <div id="picker-list" class="picker-list"></div>
+    <button id="picker-cancel" class="secondary">Cancel</button>
+  </dialog>
+
+  <script src="vendor/zxing-reader.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
