@@ -24,9 +24,9 @@
 
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
-/* iOS home-screen apps with a translucent status bar report 100% as screen height minus
-   the status bar, leaving a gap under the tab bar. 100vh is the full screen there. */
-@media (display-mode: standalone) { html, body { height: 100vh; } }
+/* iOS home-screen apps with a translucent status bar can report a viewport shorter than
+   the screen, leaving a gap under the tab bar. app.js sets --app-h to the real height. */
+body { height: var(--app-h, 100%); }
 body {
   font: 17px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--bg);
@@ -195,6 +195,7 @@ button.good { background: var(--need); }
 }
 .row { display: flex; gap: 10px; }
 .row > * { flex: 1; }
+.about { text-align: center; color: var(--muted); font-size: 13px; margin: 4px 0 8px; }
 
 /* Tabs */
 .tabs {

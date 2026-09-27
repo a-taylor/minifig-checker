@@ -338,8 +338,39 @@ $("#import-file").addEventListener("change", async (e) => {
 
 // ---------- Boot ----------
 
+const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+
+function fitHeight() {
+  // Only needed as a home-screen app, where iOS may under-report the viewport height.
+  if (standalone && innerHeight < screen.height) {
+    document.documentElement.style.setProperty("--app-h", `${screen.height}px`);
+  }
+}
+
+async function showAbout() {
+  const keys = "caches" in window ? await caches.keys() : [];
+  const version = keys.map((k) => k.replace("minifig-checker-", "")).sort().pop() || "dev";
+  $("#about").textContent =
+    `Version ${version} · screen ${screen.height}pt · viewport ${innerHeight}pt${standalone ? " · home screen" : ""}`;
+}
+
 render();
+fitHeight();
+showAbout();
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js").catch(() => {});
+  // Reload once when an updated service worker takes over, so updates show on the next open
+  // rather than the one after. Skipped on first install, when there was no controller.
+  const hadController = !!navigator.serviceWorker.controller;
+  let reloading = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (hadController && !reloading) { reloading = true; location.reload(); }
+  });
+
+  navigator.serviceWorker.register("sw.js").then((reg) => {
+    // iOS often resumes the app instead of relaunching it, so check for updates on resume too.
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") reg.update().catch(() => {});
+    });
+  }).catch(() => {});
 }
