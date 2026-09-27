@@ -21,10 +21,10 @@
 
   <main>
     <!-- Scan -->
-    <section id="view-scan" class="view active">
+    <section id="view-scan" class="view">
       <div class="camera">
         <video id="video" playsinline muted autoplay></video>
-        <div class="reticle"></div>
+        <div class="reticle"><div class="scanline"></div></div>
         <div id="camera-msg" class="camera-msg">Tap to start camera</div>
       </div>
 
@@ -41,7 +41,7 @@
     </section>
 
     <!-- Collection -->
-    <section id="view-collection" class="view">
+    <section id="view-collection" class="view active">
       <ul id="figure-list" class="figure-list"></ul>
     </section>
 
@@ -75,8 +75,8 @@
   </main>
 
   <nav class="tabs">
-    <button data-view="scan" class="active">Scan</button>
-    <button data-view="collection">Collection</button>
+    <button data-view="collection" class="active">Collection</button>
+    <button data-view="scan">Scan</button>
     <button data-view="settings">Settings</button>
   </nav>
 

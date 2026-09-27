@@ -253,6 +253,7 @@ let loopRunning = false;
 async function scanLoop() {
   if (loopRunning) return;
   loopRunning = true;
+  $(".camera").classList.add("scanning");
   try {
     while (scanning && !paused) {
       const text = await scanFrame();
@@ -266,6 +267,7 @@ async function scanLoop() {
       await new Promise((r) => setTimeout(r, 120));
     }
   } finally {
+    $(".camera").classList.remove("scanning");
     loopRunning = false;
   }
 }
@@ -337,7 +339,6 @@ $("#import-file").addEventListener("change", async (e) => {
 // ---------- Boot ----------
 
 render();
-startCamera();
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
