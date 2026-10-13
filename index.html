@@ -22,15 +22,30 @@
   <main>
     <!-- Scan -->
     <section id="view-scan" class="view">
-      <div class="camera">
-        <video id="video" playsinline muted autoplay></video>
-        <div class="reticle"><div class="scanline"></div></div>
-        <div id="camera-msg" class="camera-msg">Tap to start camera</div>
+      <div class="segmented" role="tablist">
+        <button data-mode="scan" class="active" role="tab">Scan</button>
+        <button data-mode="enter" role="tab">Enter code</button>
       </div>
 
-      <label class="button secondary photo">Scan from a photo instead
-        <input id="photo-input" type="file" accept="image/*" hidden>
-      </label>
+      <div id="mode-scan" class="mode active">
+        <div class="camera">
+          <video id="video" playsinline muted autoplay></video>
+          <div class="reticle"><div class="scanline"></div></div>
+          <div id="camera-msg" class="camera-msg">Tap to start camera</div>
+        </div>
+
+        <label class="button secondary photo">Scan from a photo instead
+          <input id="photo-input" type="file" accept="image/*" hidden>
+        </label>
+      </div>
+
+      <form id="mode-enter" class="mode card" autocomplete="off">
+        <label>Figure code
+          <input id="code-input" inputmode="numeric" placeholder="e.g. 6627610" enterkeyhint="go">
+        </label>
+        <p id="code-hint" class="hint">The 7-digit code from the box.</p>
+        <button type="submit">Check</button>
+      </form>
 
       <div id="result" class="result hidden">
         <div id="result-banner" class="banner"></div>

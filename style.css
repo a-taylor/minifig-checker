@@ -116,6 +116,29 @@ button.good { background: var(--need); }
   text-shadow: 0 1px 3px #000;
 }
 
+.segmented {
+  display: flex;
+  background: var(--border);
+  border-radius: 12px;
+  padding: 3px;
+  margin-bottom: 12px;
+}
+.segmented button {
+  flex: 1;
+  background: none;
+  color: var(--muted);
+  border-radius: 10px;
+  padding: 8px 0;
+  font-size: 15px;
+}
+.segmented button.active { background: var(--surface); color: var(--text); }
+.mode { display: none; }
+.mode.active { display: block; }
+#mode-enter { margin: 0; }
+#mode-enter input { font-size: 24px; letter-spacing: 2px; font-variant-numeric: tabular-nums; }
+#mode-enter button { width: 100%; }
+.card p.hint.error { color: var(--got); }
+
 .button.secondary { background: var(--border); color: var(--text); }
 .photo { display: block; margin-top: 12px; }
 

@@ -92,7 +92,7 @@ function render() {
 function showView(name) {
   document.querySelectorAll(".view").forEach((v) => v.classList.toggle("active", v.id === `view-${name}`));
   document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("active", b.dataset.view === name));
-  if (name === "scan") startCamera(); else stopCamera();
+  if (name === "scan" && scanMode === "scan") startCamera(); else stopCamera();
 }
 
 document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("click", () => showView(b.dataset.view)));
@@ -133,7 +133,7 @@ function showResult(code, raw) {
   }
 
   $("#result-code").textContent = `Figure code ${code}`;
-  actions.push(button("Scan next box", "", () => { hideResult(); resumeScanning(); }));
+  actions.push(button(scanMode === "scan" ? "Scan next box" : "Check another code", "", nextBox));
   $("#result-actions").replaceChildren(...actions);
   $("#result").classList.remove("hidden");
   $("#result").scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -145,13 +145,45 @@ function showUnreadable(raw) {
   banner.textContent = "NO CODE";
   $("#result-name").textContent = "Not a minifig box code";
   $("#result-code").textContent = `Scanned “${raw}”`;
-  $("#result-actions").replaceChildren(button("Scan again", "", () => { hideResult(); resumeScanning(); }));
+  $("#result-actions").replaceChildren(button("Scan again", "", nextBox));
   $("#result").classList.remove("hidden");
 }
 
 function hideResult() {
   $("#result").classList.add("hidden");
 }
+
+function nextBox() {
+  hideResult();
+  if (scanMode === "scan") resumeScanning();
+  else { $("#code-input").value = ""; $("#code-input").focus(); }
+}
+
+// ---------- Scan / enter code toggle ----------
+
+let scanMode = "scan";
+
+function setScanMode(mode) {
+  scanMode = mode;
+  document.querySelectorAll(".segmented button").forEach((b) => b.classList.toggle("active", b.dataset.mode === mode));
+  document.querySelectorAll(".mode").forEach((m) => m.classList.toggle("active", m.id === `mode-${mode}`));
+  hideResult();
+  if (mode === "scan") resumeScanning();
+  else { stopCamera(); $("#code-input").focus(); }
+}
+
+document.querySelectorAll(".segmented button").forEach((b) => b.addEventListener("click", () => setScanMode(b.dataset.mode)));
+
+$("#mode-enter").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const typed = $("#code-input").value;
+  // Accept the code with stray spaces, or a whole pasted Data Matrix string.
+  const code = extractCode(typed.replace(/\s+/g, "")) || extractCode(typed);
+  const hint = $("#code-hint");
+  hint.classList.toggle("error", !code);
+  hint.textContent = code ? "The 7-digit code from the box." : "That isn't a 7-digit code.";
+  if (code) { $("#code-input").blur(); showResult(code, typed); } else hideResult();
+});
 
 function pickFigure(code, bought, raw) {
   const dlg = $("#picker");
@@ -205,7 +237,7 @@ function setCameraMsg(text) {
 async function startCamera() {
   if (stream) return;
   if (!navigator.mediaDevices?.getUserMedia) {
-    setCameraMsg("Camera not available — type the code below");
+    setCameraMsg("Camera not available — use Enter code");
     return;
   }
   try {

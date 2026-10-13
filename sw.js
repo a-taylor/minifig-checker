@@ -1,5 +1,5 @@
 // Bump VERSION whenever any file below changes so phones pick up the update.
-const VERSION = "v4";
+const VERSION = "v5";
 const CACHE = `minifig-checker-${VERSION}`;
 const FILES = [
   "./",
