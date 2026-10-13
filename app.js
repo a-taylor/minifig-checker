@@ -133,7 +133,7 @@ function showResult(code, raw) {
   }
 
   $("#result-code").textContent = `Figure code ${code}`;
-  actions.push(button(scanMode === "scan" ? "Scan next box" : "Check another code", "", nextBox));
+  actions.push(button("Scan next code", "", nextBox));
   $("#result-actions").replaceChildren(...actions);
   $("#result").classList.remove("hidden");
   $("#result").scrollIntoView({ behavior: "smooth", block: "nearest" });
