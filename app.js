@@ -8,7 +8,7 @@ const STORAGE_KEY = "minifig-checker-v2";
 const SEED = {
   series: "71053 Shrek",
   figures: [
-    ["Thelonious", null, "725S6"],
+    ["Thelonious", "725S6"],
     ["Puss in Boots", "6627610", "333S6"],
     ["Gingy"],
     ["Shrek"],
@@ -20,7 +20,7 @@ const SEED = {
     ["Lord Farquaad"],
     ["Fairy Godmother"],
     ["Prince Charming", "6627616", "634S6"],
-  ].map(([name, ...codes], i) => ({ id: i + 1, name, owned: false, codes: codes.filter(Boolean) })),
+  ].map(([name, ...codes], i) => ({ id: i + 1, name, owned: false, codes })),
 };
 
 // ---------- State ----------
