@@ -1,25 +1,26 @@
 "use strict";
 
 // Codes are the first field of the box's Data Matrix (e.g. "6627610 333S6 16536051 008506"),
-// which identifies the figure. The last field is a per-box serial and is ignored.
+// which identifies the figure. The second field is also printed under the matrix and differs
+// per figure, so it is stored too and can be typed in. The last field is a per-box serial.
 const STORAGE_KEY = "minifig-checker-v2";
 
 const SEED = {
   series: "71053 Shrek",
   figures: [
-    ["Thelonious"],
-    ["Puss in Boots", "6627610"],
+    ["Thelonious", null, "725S6"],
+    ["Puss in Boots", "6627610", "333S6"],
     ["Gingy"],
     ["Shrek"],
     ["Dragon"],
     ["Fiona and Donkey"],
     ["Merlin"],
     ["Pinocchio"],
-    ["Big Bad Wolf", "6627609"],
+    ["Big Bad Wolf", "6627609", "135S6"],
     ["Lord Farquaad"],
     ["Fairy Godmother"],
-    ["Prince Charming", "6627616"],
-  ].map(([name, code], i) => ({ id: i + 1, name, owned: false, codes: code ? [code] : [] })),
+    ["Prince Charming", "6627616", "634S6"],
+  ].map(([name, ...codes], i) => ({ id: i + 1, name, owned: false, codes: codes.filter(Boolean) })),
 };
 
 // ---------- State ----------
@@ -104,6 +105,14 @@ function extractCode(text) {
   return m ? m[0] : null;
 }
 
+// The printed code is the Data Matrix's second field, e.g. "333S6".
+const PRINTED = /^[0-9A-Z]{5}$/;
+
+function printedCode(raw) {
+  const field = raw.trim().split(/\s+/)[1]?.toUpperCase();
+  return field && PRINTED.test(field) ? field : null;
+}
+
 function button(label, cls, onClick) {
   const b = el("button", { textContent: label, className: cls || "" });
   b.addEventListener("click", onClick);
@@ -112,6 +121,8 @@ function button(label, cls, onClick) {
 
 function showResult(code, raw) {
   const fig = figureForCode(code);
+  const printed = printedCode(raw);
+  if (fig && printed && !fig.codes.includes(printed)) { assignCode(printed, fig); save(); }
   const banner = $("#result-banner");
   const actions = [];
 
@@ -174,14 +185,17 @@ function setScanMode(mode) {
 
 document.querySelectorAll(".segmented button").forEach((b) => b.addEventListener("click", () => setScanMode(b.dataset.mode)));
 
+const HINT = "The code printed under the square barcode.";
+
 $("#mode-enter").addEventListener("submit", (e) => {
   e.preventDefault();
   const typed = $("#code-input").value;
-  // Accept the code with stray spaces, or a whole pasted Data Matrix string.
-  const code = extractCode(typed.replace(/\s+/g, "")) || extractCode(typed);
+  // Accept the printed code or a 7-digit one, with stray spaces, or a whole pasted Data Matrix string.
+  const compact = typed.replace(/\s+/g, "").toUpperCase();
+  const code = (PRINTED.test(compact) && compact) || extractCode(compact) || extractCode(typed);
   const hint = $("#code-hint");
   hint.classList.toggle("error", !code);
-  hint.textContent = code ? "The 7-digit code from the box." : "That isn't a 7-digit code.";
+  hint.textContent = code ? HINT : "That doesn't look like a box code.";
   if (code) { $("#code-input").blur(); showResult(code, typed); } else hideResult();
 });
 
@@ -191,6 +205,8 @@ function pickFigure(code, bought, raw) {
   $("#picker-list").replaceChildren(...state.figures.map((f) =>
     button(f.name, f.owned ? "owned" : "", () => {
       assignCode(code, f);
+      const printed = printedCode(raw);
+      if (printed) assignCode(printed, f);
       if (bought) f.owned = true;
       save();
       dlg.close();
