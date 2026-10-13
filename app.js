@@ -1,25 +1,26 @@
 "use strict";
 
 // Codes are the first field of the box's Data Matrix (e.g. "6627610 333S6 16536051 008506"),
-// which identifies the figure. The last field is a per-box serial and is ignored.
+// which identifies the figure. The second field is also printed under the matrix and differs
+// per figure, so it is stored too and can be typed in. The last field is a per-box serial.
 const STORAGE_KEY = "minifig-checker-v2";
 
 const SEED = {
   series: "71053 Shrek",
   figures: [
-    ["Thelonious"],
-    ["Puss in Boots", "6627610"],
+    ["Thelonious", "6627608", "725S6"],
+    ["Puss in Boots", "6627610", "333S6"],
     ["Gingy"],
     ["Shrek"],
     ["Dragon"],
     ["Fiona and Donkey"],
     ["Merlin"],
     ["Pinocchio"],
-    ["Big Bad Wolf", "6627609"],
+    ["Big Bad Wolf", "6627609", "135S6"],
     ["Lord Farquaad"],
     ["Fairy Godmother"],
-    ["Prince Charming", "6627616"],
-  ].map(([name, code], i) => ({ id: i + 1, name, owned: false, codes: code ? [code] : [] })),
+    ["Prince Charming", "6627616", "634S6"],
+  ].map(([name, ...codes], i) => ({ id: i + 1, name, owned: false, codes })),
 };
 
 // ---------- State ----------
@@ -92,7 +93,7 @@ function render() {
 function showView(name) {
   document.querySelectorAll(".view").forEach((v) => v.classList.toggle("active", v.id === `view-${name}`));
   document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("active", b.dataset.view === name));
-  if (name === "scan") startCamera(); else stopCamera();
+  if (name === "scan" && scanMode === "scan") startCamera(); else stopCamera();
 }
 
 document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("click", () => showView(b.dataset.view)));
@@ -104,6 +105,14 @@ function extractCode(text) {
   return m ? m[0] : null;
 }
 
+// The printed code is the Data Matrix's second field, e.g. "333S6".
+const PRINTED = /^[0-9A-Z]{5}$/;
+
+function printedCode(raw) {
+  const field = raw.trim().split(/\s+/)[1]?.toUpperCase();
+  return field && PRINTED.test(field) ? field : null;
+}
+
 function button(label, cls, onClick) {
   const b = el("button", { textContent: label, className: cls || "" });
   b.addEventListener("click", onClick);
@@ -112,6 +121,8 @@ function button(label, cls, onClick) {
 
 function showResult(code, raw) {
   const fig = figureForCode(code);
+  const printed = printedCode(raw);
+  if (fig && printed && !fig.codes.includes(printed)) { assignCode(printed, fig); save(); }
   const banner = $("#result-banner");
   const actions = [];
 
@@ -133,7 +144,7 @@ function showResult(code, raw) {
   }
 
   $("#result-code").textContent = `Figure code ${code}`;
-  actions.push(button("Scan next box", "", () => { hideResult(); resumeScanning(); }));
+  actions.push(button("Scan next code", "", nextBox));
   $("#result-actions").replaceChildren(...actions);
   $("#result").classList.remove("hidden");
   $("#result").scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -145,7 +156,7 @@ function showUnreadable(raw) {
   banner.textContent = "NO CODE";
   $("#result-name").textContent = "Not a minifig box code";
   $("#result-code").textContent = `Scanned “${raw}”`;
-  $("#result-actions").replaceChildren(button("Scan again", "", () => { hideResult(); resumeScanning(); }));
+  $("#result-actions").replaceChildren(button("Scan again", "", nextBox));
   $("#result").classList.remove("hidden");
 }
 
@@ -153,12 +164,49 @@ function hideResult() {
   $("#result").classList.add("hidden");
 }
 
+function nextBox() {
+  hideResult();
+  if (scanMode === "scan") resumeScanning();
+  else { $("#code-input").value = ""; $("#code-input").focus(); }
+}
+
+// ---------- Scan / enter code toggle ----------
+
+let scanMode = "scan";
+
+function setScanMode(mode) {
+  scanMode = mode;
+  document.querySelectorAll(".segmented button").forEach((b) => b.classList.toggle("active", b.dataset.mode === mode));
+  document.querySelectorAll(".mode").forEach((m) => m.classList.toggle("active", m.id === `mode-${mode}`));
+  hideResult();
+  if (mode === "scan") resumeScanning();
+  else { stopCamera(); $("#code-input").focus(); }
+}
+
+document.querySelectorAll(".segmented button").forEach((b) => b.addEventListener("click", () => setScanMode(b.dataset.mode)));
+
+const HINT = "The code printed under the square barcode.";
+
+$("#mode-enter").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const typed = $("#code-input").value;
+  // Accept the printed code or a 7-digit one, with stray spaces, or a whole pasted Data Matrix string.
+  const compact = typed.replace(/\s+/g, "").toUpperCase();
+  const code = (PRINTED.test(compact) && compact) || extractCode(compact) || extractCode(typed);
+  const hint = $("#code-hint");
+  hint.classList.toggle("error", !code);
+  hint.textContent = code ? HINT : "That doesn't look like a box code.";
+  if (code) { $("#code-input").blur(); showResult(code, typed); } else hideResult();
+});
+
 function pickFigure(code, bought, raw) {
   const dlg = $("#picker");
   $("#picker-title").textContent = bought ? "Which figure was in the box?" : "Which figure is this code?";
   $("#picker-list").replaceChildren(...state.figures.map((f) =>
     button(f.name, f.owned ? "owned" : "", () => {
       assignCode(code, f);
+      const printed = printedCode(raw);
+      if (printed) assignCode(printed, f);
       if (bought) f.owned = true;
       save();
       dlg.close();
@@ -205,7 +253,7 @@ function setCameraMsg(text) {
 async function startCamera() {
   if (stream) return;
   if (!navigator.mediaDevices?.getUserMedia) {
-    setCameraMsg("Camera not available — type the code below");
+    setCameraMsg("Camera not available — use Enter code");
     return;
   }
   try {
