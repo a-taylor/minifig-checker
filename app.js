@@ -8,7 +8,7 @@ const STORAGE_KEY = "minifig-checker-v2";
 const SEED = {
   series: "71053 Shrek",
   figures: [
-    ["Thelonious", "725S6"],
+    ["Thelonious", "6627608", "725S6"],
     ["Puss in Boots", "6627610", "333S6"],
     ["Gingy"],
     ["Shrek"],
